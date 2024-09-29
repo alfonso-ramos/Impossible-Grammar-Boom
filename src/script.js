@@ -338,7 +338,6 @@ class GameOverScene extends Phaser.Scene {
             });
     }
 }
-
 // Configuración del juego
 var config = {
     type: Phaser.AUTO,
