@@ -3,8 +3,8 @@ const verbLevels = [
     { verb: 'play', correctConjugations: ['played', 'playing', 'plays'], incorrectConjugations: ['playes', 'plaied', 'pleyd'] },
     { verb: 'walk', correctConjugations: ['walked', 'walking', 'walks'], incorrectConjugations: ['walkes', 'walkedh', 'wolked'] },
     { verb: 'jump', correctConjugations: ['jumped', 'jumping', 'jumps'], incorrectConjugations: ['jumpes', 'jmping', 'jumpted'] },
-    { verb: 'look', correctConjugations: ['looked', 'looking', 'looks'], incorrectConjugations: ['lookes', 'lookeded', 'luked'] },
-    { verb: 'talk', correctConjugations: ['talked', 'talking', 'talks'], incorrectConjugations: ['talkes', 'talkinged', 'tulks'] },
+    { verb: 'look', correctConjugations: ['looked', 'looking', 'looks'], incorrectConjugations: ['lookes', 'lookede', 'luked'] },
+    { verb: 'talk', correctConjugations: ['talked', 'talking', 'talks'], incorrectConjugations: ['talkes', 'talkined', 'tulks'] },
     { verb: 'go', correctConjugations: ['went', 'going', 'goes'], incorrectConjugations: ['goin', 'wented', 'goed'] },
     { verb: 'see', correctConjugations: ['saw', 'seeing', 'sees'], incorrectConjugations: ['seens', 'sawe', 'seenig'] },
     { verb: 'come', correctConjugations: ['came', 'coming', 'comes'], incorrectConjugations: ['comed', 'comies', 'commed'] },
@@ -37,14 +37,20 @@ class MenuScene extends Phaser.Scene {
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
         this.load.image('bomb', 'assets/bomb.png');
-        this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
-    }
+        this.load.image('logo', 'assets/grammar-boom.png'); // Cargar la imagen del logo
+
+        // Cargar el personaje Pink Monster
+        this.load.spritesheet('idle', 'assets/Pink_Monster_Idle_4.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('run', 'assets/Pink_Monster_Run_6.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('jump', 'assets/Pink_Monster_Jump_8.png', { frameWidth: 32, frameHeight: 32 });
+    }   
 
     create() {
         this.add.image(400, 300, 'sky');
-        this.add.text(300, 200, 'Menu Principal', { fontSize: '32px', fill: '#fff' });
+        this.add.image(150, 250, 'logo').setScale(0.9); // Posicionar el logo en el menú principal
+        this.add.text(300, 200, 'Menu Principal', { fontSize: '32px', fill: '#fff', fontFamily: 'Arial' });
 
-        var startButton = this.add.text(350, 300, 'Start Game', { fontSize: '24px', fill: '#fff' })
+        var startButton = this.add.text(350, 300, 'Start Game', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
             .setInteractive()
             .on('pointerdown', () => this.startGame());
 
@@ -80,12 +86,11 @@ class GameScene extends Phaser.Scene {
         this.load.image('sky', 'assets/sky.png');
         this.load.image('ground', 'assets/platform.png');
         this.load.image('bomb', 'assets/bomb.png');
-        this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
     }
 
     create() {
         // Crear pantalla de transición para el nivel
-        this.levelTransitionScreen = this.add.text(400, 300, '', { fontSize: '48px', fill: '#000' }).setOrigin(0.5);
+        this.levelTransitionScreen = this.add.text(400, 300, '', { fontSize: '48px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
         this.levelTransitionScreen.setDepth(1); // Asegurar que la transición esté por encima
         this.levelTransitionScreen.visible = false;
 
@@ -97,28 +102,29 @@ class GameScene extends Phaser.Scene {
         this.add.image(400, 300, 'sky');
         this.createPlatforms();
 
-        // Jugador
-        this.player = this.physics.add.sprite(600, 200, 'dude'); // Iniciar en la plataforma superior derecha
+        // Jugador con el personaje Pink Monster
+        this.player = this.physics.add.sprite(600, 150, 'idle'); // Posición inicial en la plataforma superior derecha
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
 
-        // Animaciones del jugador
+        // Animaciones del personaje Pink Monster
         this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+            key: 'idle',
+            frames: this.anims.generateFrameNumbers('idle', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
-            key: 'turn',
-            frames: [{ key: 'dude', frame: 4 }],
-            frameRate: 20
+            key: 'run',
+            frames: this.anims.generateFrameNumbers('run', { start: 0, end: 5 }),
+            frameRate: 10,
+            repeat: -1
         });
 
         this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+            key: 'jump',
+            frames: this.anims.generateFrameNumbers('jump', { start: 0, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
@@ -129,22 +135,8 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // Inicializar el texto del nivel y el puntaje
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
-        this.levelText = this.add.text(16, 50, 'Level: 1', { fontSize: '32px', fill: '#000' });
-
-        // Detectar el código Konami en el juego
-        this.input.keyboard.on('keydown', (event) => {
-            if (event.keyCode === konamiCode[konamiCodePosition]) {
-                konamiCodePosition++;
-                if (konamiCodePosition === konamiCode.length) {
-                    konamiCodePosition = 0;
-                    // Código Konami completado, ir a la pantalla de felicitación
-                    this.scene.start('EndScene', { score: this.score + 500 }); // Ir a la pantalla final con el puntaje acumulado
-                }
-            } else {
-                konamiCodePosition = 0; // Reiniciar si el código no se sigue correctamente
-            }
-        });
+        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000', fontFamily: 'Arial' });
+        this.levelText = this.add.text(16, 50, 'Level: 1', { fontSize: '32px', fill: '#000', fontFamily: 'Arial' });
 
         // Mostrar pantalla de transición y pausar
         this.showLevelTransition();
@@ -162,7 +154,9 @@ class GameScene extends Phaser.Scene {
         setTimeout(() => {
             this.levelTransitionScreen.visible = false;
             this.physics.resume(); // Reanudar el juego
-            this.player.setPosition(600, 200); // Posicionar al jugador en la plataforma superior derecha
+
+            // Reubicar el personaje en la posición inicial
+            this.player.setPosition(600, 150); // Posición inicial en la plataforma superior derecha
             this.createConjugations(); // Crear conjugaciones
 
             // Si el nivel es 5 o superior, crear bombas adicionales
@@ -180,8 +174,8 @@ class GameScene extends Phaser.Scene {
         this.platforms.create(600, 450, 'ground').setScale(0.7).refreshBody();
         this.platforms.create(200, 350, 'ground').setScale(0.7).refreshBody();
         this.platforms.create(750, 300, 'ground').setScale(0.7).refreshBody();
-        this.platforms.create(50, 220, 'ground').setScale(0.7).refreshBody(); 
-        this.platforms.create(600, 200, 'ground').setScale(0.7).refreshBody(); // Plataforma superior derecha
+        this.platforms.create(50, 220, 'ground').setScale(0.7).refreshBody();
+        this.platforms.create(600, 150, 'ground').setScale(0.7).refreshBody(); // Plataforma superior derecha
     }
 
     createConjugations() {
@@ -201,14 +195,13 @@ class GameScene extends Phaser.Scene {
         Phaser.Utils.Array.Shuffle(allConjugations); // Barajar el orden de las conjugaciones
 
         // Mostrar el verbo en la parte superior
-        this.verbText = this.add.text(300, 100, 'Verb: ' + verb, { fontSize: '32px', fill: '#000' });
+        this.verbText = this.add.text(300, 100, 'Verb: ' + verb, { fontSize: '32px', fill: '#000', fontFamily: 'Arial' });
 
-        // Asignar palabras a posiciones fijas en la pantalla
         for (let i = 0; i < allConjugations.length; i++) {
             if (i >= wordPositions.length) break; // Evitar desbordar las posiciones
 
             const { x, y } = wordPositions[i]; // Tomar una posición fija
-            const conjugationText = this.add.text(x, y, allConjugations[i], { fontSize: '24px', fill: '#000' });
+            const conjugationText = this.add.text(x, y, allConjugations[i], { fontSize: '24px', fill: '#000', fontFamily: 'Arial' });
             this.conjugations.add(conjugationText);
 
             // Aplicar físicas a cada conjugación
@@ -224,20 +217,37 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.conjugations, this.collectConjugation, null, this);
     }
 
+    createBomb() {
+        // Crear una bomba en una posición aleatoria, asegurando que no esté en la misma posición que el jugador ni cerca
+        let x;
+        do {
+            x = Phaser.Math.Between(50, 750); // Rango de posición X, evitar los extremos
+        } while (Math.abs(x - this.player.x) < 100); // Asegurar que la bomba no esté cerca del jugador
+
+        var bomb = this.bombs.create(x, 16, 'bomb'); // Crear la bomba
+        bomb.setBounce(1);
+        bomb.setCollideWorldBounds(true);
+        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+    }
+
     update() {
+        // Control del movimiento del personaje
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160);
-            this.player.anims.play('left', true);
+            this.player.anims.play('run', true);
+            this.player.flipX = true; // Invertir al moverse a la izquierda
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(160);
-            this.player.anims.play('right', true);
+            this.player.anims.play('run', true);
+            this.player.flipX = false; // Restablecer al moverse a la derecha
         } else {
             this.player.setVelocityX(0);
-            this.player.anims.play('turn');
+            this.player.anims.play('idle');
         }
 
         if (this.cursors.up.isDown && this.player.body.touching.down) {
             this.player.setVelocityY(-330);
+            this.player.anims.play('jump');
         }
     }
 
@@ -272,19 +282,10 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    createBomb() {
-        // Crear una bomba en una posición aleatoria
-        var x = Phaser.Math.Between(0, 800); // Rango de posición X
-        var bomb = this.bombs.create(x, 16, 'bomb'); // Crear la bomba
-        bomb.setBounce(1);
-        bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-    }
-
     hitBomb(player, bomb) {
         this.physics.pause();
         player.setTint(0xff0000);
-        player.anims.play('turn');
+        player.anims.play('idle');
         this.scene.start('GameOverScene', { score: this.score });
     }
 }
@@ -297,10 +298,11 @@ class EndScene extends Phaser.Scene {
 
     create(data) {
         this.add.image(400, 300, 'sky');
-        this.add.text(300, 200, 'Congratulations!', { fontSize: '48px', fill: '#fff' });
-        this.add.text(300, 300, 'Final Score: ' + data.score, { fontSize: '32px', fill: '#fff' });
+        this.add.image(150, 250, 'logo').setScale(0.9); // Posicionar el logo en la pantalla final
+        this.add.text(300, 200, 'Congratulations!', { fontSize: '48px', fill: '#fff', fontFamily: 'Arial' });
+        this.add.text(300, 300, 'Final Score: ' + data.score, { fontSize: '32px', fill: '#fff', fontFamily: 'Arial' });
 
-        var nextButton = this.add.text(300, 400, 'Menu Principal', { fontSize: '24px', fill: '#fff' })
+        var nextButton = this.add.text(300, 400, 'Menu Principal', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.scene.start('MenuScene'); // Regresar al menú principal
@@ -316,10 +318,11 @@ class GameOverScene extends Phaser.Scene {
 
     create(data) {
         this.add.image(400, 300, 'sky');
-        this.add.text(300, 200, 'Game Over', { fontSize: '32px', fill: '#fff' });
-        this.add.text(300, 250, 'Score: ' + data.score, { fontSize: '24px', fill: '#fff' });
+        this.add.image(150, 250, 'logo').setScale(0.5); // Posicionar el logo en la pantalla de Game Over
+        this.add.text(300, 200, 'Game Over', { fontSize: '32px', fill: '#fff', fontFamily: 'Arial' });
+        this.add.text(300, 250, 'Score: ' + data.score, { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' });
 
-        var restartButton = this.add.text(300, 350, 'Restart', { fontSize: '24px', fill: '#fff' })
+        var restartButton = this.add.text(300, 350, 'Restart', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.scene.stop('GameScene');
@@ -328,7 +331,7 @@ class GameOverScene extends Phaser.Scene {
                 this.scene.get('GameScene').score = 0; // Reiniciar el puntaje
             });
 
-        var menuButton = this.add.text(300, 400, 'Menu Principal', { fontSize: '24px', fill: '#fff' })
+        var menuButton = this.add.text(300, 400, 'Menu Principal', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.scene.stop('GameScene');
@@ -338,6 +341,7 @@ class GameOverScene extends Phaser.Scene {
             });
     }
 }
+
 // Configuración del juego
 var config = {
     type: Phaser.AUTO,
