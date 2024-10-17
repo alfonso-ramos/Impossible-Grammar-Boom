@@ -15,11 +15,11 @@ const verbLevels = [
 // Posiciones fijas para las palabras en la pantalla
 const wordPositions = [
     { x: 100, y: 300 },
-    { x: 300, y: 300 },
+    { x: 270, y: 300 },
     { x: 500, y: 300 },
     { x: 700, y: 300 },
-    { x: 200, y: 450 },
-    { x: 400, y: 450 },
+    { x: 50, y: 150 },
+    { x: 350, y: 450 },
     { x: 600, y: 450 }
 ];
 
@@ -31,6 +31,7 @@ let konamiCodePosition = 0;
 class MenuScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MenuScene' });
+        this.music = null; // Variable para la música
     }
 
     preload() {
@@ -38,19 +39,41 @@ class MenuScene extends Phaser.Scene {
         this.load.image('ground', 'assets/platform.png');
         this.load.image('bomb', 'assets/bomb.png');
         this.load.image('logo', 'assets/grammar-boom.png'); // Cargar la imagen del logo
+        this.load.audio('errorSound', 'assets/bong.mp3');
+        this.load.audio('correctSound', 'assets/correctword.mp3');
+        this.load.audio('backgroundMusic', 'assets/music.mp3'); // Cargar la música de fondo
 
         // Cargar el personaje Pink Monster
         this.load.spritesheet('idle', 'assets/Pink_Monster_Idle_4.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('run', 'assets/Pink_Monster_Run_6.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('jump', 'assets/Pink_Monster_Jump_8.png', { frameWidth: 32, frameHeight: 32 });
-    }   
+    }
 
     create() {
+        // Reproducir la música de fondo una vez y que se mantenga en todas las escenas
+        if (!this.music) {
+            this.music = this.sound.add('backgroundMusic', {
+                volume: 0.4,  // Volumen bajo
+                loop: true    // La música se repetirá indefinidamente
+            });
+            this.music.play(); // Inicia la música de fondo
+        }
+
         this.add.image(400, 300, 'sky');
         this.add.image(150, 250, 'logo').setScale(0.9); // Posicionar el logo en el menú principal
-        this.add.text(300, 200, 'Menu Principal', { fontSize: '32px', fill: '#fff', fontFamily: 'Arial' });
+        this.add.text(350, 100, 'Main Menu', { fontSize: '40px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
 
-        var startButton = this.add.text(350, 300, 'Start Game', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
+        // Texto de instrucciones, un poco más arriba y alineado a la izquierda
+        this.add.text(400, 180, 'Instructions:', { fontSize: '24px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(250, 210, 'Find the correct conjugation of the verb that will', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(250, 240, 'appear above.', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(400, 270, 'The verb tenses are:', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(300, 300, ' - third person', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(300, 330, ' - Past', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(300, 360, ' - Present Continuous', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(250, 400, 'Don\'t forget to avoid the bombs and good luck!', { fontSize: '18px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+
+        var startButton = this.add.text(350, 450, 'Start Game', { fontSize: '30px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' })
             .setInteractive()
             .on('pointerdown', () => this.startGame());
 
@@ -74,6 +97,7 @@ class MenuScene extends Phaser.Scene {
     }
 }
 
+
 // Escena del juego principal
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -90,7 +114,7 @@ class GameScene extends Phaser.Scene {
 
     create() {
         // Crear pantalla de transición para el nivel
-        this.levelTransitionScreen = this.add.text(400, 300, '', { fontSize: '48px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        this.levelTransitionScreen = this.add.text(400, 300, '', { fontSize: '48px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' }).setOrigin(0.5);
         this.levelTransitionScreen.setDepth(1); // Asegurar que la transición esté por encima
         this.levelTransitionScreen.visible = false;
 
@@ -135,8 +159,8 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // Inicializar el texto del nivel y el puntaje
-        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000', fontFamily: 'Arial' });
-        this.levelText = this.add.text(16, 50, 'Level: 1', { fontSize: '32px', fill: '#000', fontFamily: 'Arial' });
+        this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.levelText = this.add.text(16, 50, 'Level: 1', { fontSize: '32px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
 
         // Mostrar pantalla de transición y pausar
         this.showLevelTransition();
@@ -195,13 +219,13 @@ class GameScene extends Phaser.Scene {
         Phaser.Utils.Array.Shuffle(allConjugations); // Barajar el orden de las conjugaciones
 
         // Mostrar el verbo en la parte superior
-        this.verbText = this.add.text(300, 100, 'Verb: ' + verb, { fontSize: '32px', fill: '#000', fontFamily: 'Arial' });
+        this.verbText = this.add.text(300, 100, 'Verb: ' + verb, { fontSize: '32px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
 
         for (let i = 0; i < allConjugations.length; i++) {
             if (i >= wordPositions.length) break; // Evitar desbordar las posiciones
 
             const { x, y } = wordPositions[i]; // Tomar una posición fija
-            const conjugationText = this.add.text(x, y, allConjugations[i], { fontSize: '24px', fill: '#000', fontFamily: 'Arial' });
+            const conjugationText = this.add.text(x, y, allConjugations[i], { fontSize: '24px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
             this.conjugations.add(conjugationText);
 
             // Aplicar físicas a cada conjugación
@@ -253,15 +277,17 @@ class GameScene extends Phaser.Scene {
 
     collectConjugation(player, conjugation) {
         conjugation.destroy(); // Elimina la conjugación tomada
-
+    
         if (!conjugation.isCorrect) {
+            this.sound.play('errorSound'); // Reproducir el sonido si la conjugación es incorrecta
             // Si es una conjugación incorrecta, termina el juego
             this.scene.start('GameOverScene', { score: this.score });
         } else {
+            this.sound.play('correctSound'); // Reproducir el sonido si la conjugación es correcta
             // Incrementar la puntuación solo si es una conjugación correcta
             this.score += 10;
             this.scoreText.setText('Score: ' + this.score);
-
+    
             // Verificar si todas las conjugaciones correctas fueron recolectadas
             const correctLeft = this.conjugations.getChildren().filter(c => c.isCorrect).length;
             if (correctLeft === 0) { // Si no quedan correctas
@@ -270,7 +296,7 @@ class GameScene extends Phaser.Scene {
             }
         }
     }
-
+    
     nextLevel() {
         this.currentLevel++;
         this.levelText.setText('Level: ' + (this.currentLevel + 1)); // Actualizar el nivel en pantalla
@@ -281,8 +307,9 @@ class GameScene extends Phaser.Scene {
             this.scene.start('EndScene', { score: this.score });
         }
     }
-
+    
     hitBomb(player, bomb) {
+        this.sound.play('errorSound'); // Reproducir el sonido al tocar una bomba
         this.physics.pause();
         player.setTint(0xff0000);
         player.anims.play('idle');
@@ -299,10 +326,10 @@ class EndScene extends Phaser.Scene {
     create(data) {
         this.add.image(400, 300, 'sky');
         this.add.image(150, 250, 'logo').setScale(0.9); // Posicionar el logo en la pantalla final
-        this.add.text(300, 200, 'Congratulations!', { fontSize: '48px', fill: '#fff', fontFamily: 'Arial' });
-        this.add.text(300, 300, 'Final Score: ' + data.score, { fontSize: '32px', fill: '#fff', fontFamily: 'Arial' });
+        this.add.text(300, 200, 'Congratulations!', { fontSize: '48px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(300, 300, 'Final Score: ' + data.score, { fontSize: '32px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
 
-        var nextButton = this.add.text(300, 400, 'Menu Principal', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
+        var nextButton = this.add.text(300, 400, 'Main Menu', { fontSize: '24px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.scene.start('MenuScene'); // Regresar al menú principal
@@ -319,10 +346,10 @@ class GameOverScene extends Phaser.Scene {
     create(data) {
         this.add.image(400, 300, 'sky');
         this.add.image(150, 250, 'logo').setScale(0.5); // Posicionar el logo en la pantalla de Game Over
-        this.add.text(300, 200, 'Game Over', { fontSize: '32px', fill: '#fff', fontFamily: 'Arial' });
-        this.add.text(300, 250, 'Score: ' + data.score, { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' });
+        this.add.text(300, 200, 'Game Over', { fontSize: '32px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
+        this.add.text(300, 250, 'Score: ' + data.score, { fontSize: '24px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' });
 
-        var restartButton = this.add.text(300, 350, 'Restart', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
+        var restartButton = this.add.text(300, 350, 'Restart', { fontSize: '24px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.scene.stop('GameScene');
@@ -331,7 +358,7 @@ class GameOverScene extends Phaser.Scene {
                 this.scene.get('GameScene').score = 0; // Reiniciar el puntaje
             });
 
-        var menuButton = this.add.text(300, 400, 'Menu Principal', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' })
+        var menuButton = this.add.text(300, 400, 'Main Menu', { fontSize: '24px', fill: '#fff', fontFamily: 'VCR_OSD_MONO' })
             .setInteractive()
             .on('pointerdown', () => {
                 this.scene.stop('GameScene');
